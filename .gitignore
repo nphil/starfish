@@ -3,3 +3,8 @@ server/config*.json
 *.log
 .tvweb_httpd
 lg-webos-mqtt/
+
+# Session scratch and local notes (never publish: contains TV address/credentials)
+caps/
+RESUME-NOTES.md
+docs/research/
