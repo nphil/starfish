@@ -906,6 +906,17 @@ var ADBLOCK_PLATFORM = [
 var ADBLOCK_DOMAINS = ADBLOCK_ADS.concat(ADBLOCK_PLATFORM);
 
 /*
+ * Homebrew Channel's "block system updates" is four hosts appended to a copy
+ * of /etc/hosts and bind-mounted over it from its startup script. Our bind
+ * stacks on top of that one, so whatever it wrote is hidden the moment we
+ * mount: on a set with the block switched on, the update servers were
+ * reachable again, the TV found a 1.7GB firmware update, and put its alert up
+ * at every boot. Carry the block in our table whenever the flag asks for it.
+ */
+var WEBOSBREW_BLOCK_FLAG = '/var/luna/preferences/webosbrew_block_updates';
+var LG_UPDATE_HOSTS = ['snu.lge.com', 'su-dev.lge.com', 'su.lge.com', 'su-ssl.lge.com'];
+
+/*
  * The store's own server, as the TV has it. lgtvsdp.com on webOS 4 and
  * nextlgsdp.com on webOS 9 are both in the list above, but a set this has not
  * seen could name a third - and then the full tier would claim to block the
@@ -974,6 +985,12 @@ function setAdBlock(mode, cb) {
     ];
     for (var i = 0; i < list.length; i++) {
       lines.push('0.0.0.0\t' + list[i]);
+    }
+    if (fs.existsSync(WEBOSBREW_BLOCK_FLAG)) {
+      lines.push('');
+      lines.push('# Homebrew Channel system update block, carried from its own /etc/hosts');
+      lines.push('127.0.0.1\t' + LG_UPDATE_HOSTS.join(' '));
+      lines.push('::1\t' + LG_UPDATE_HOSTS.join(' '));
     }
     lines.push('');
     try {
