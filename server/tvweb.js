@@ -27,7 +27,7 @@ var zlib = require('zlib');
  * a link to /releases/tag/v<version>, so a value with no tag behind it gives a
  * 404 rather than a wrong page.
  */
-var TVWEB_VERSION = '0.34.3';
+var TVWEB_VERSION = '0.34.4';
 
 // ---------------------------------------------------------------- config
 var CONFIG = {
@@ -2829,6 +2829,7 @@ function screensaverMode() {
 
 function screensaverList() {
   var cur = screensaverMode();
+  var can = screensaverReplaceable();
   var out = [];
   for (var k in SCREENSAVERS) {
     out.push({
@@ -2836,17 +2837,43 @@ function screensaverList() {
       label: SCREENSAVERS[k].label,
       description: SCREENSAVERS[k].description,
       active: k === cur,
-      available: k === 'stock' || !!assetPath(SCREENSAVERS[k].qml)
+      available: k === 'stock' || (can.ok && !!assetPath(SCREENSAVERS[k].qml))
     });
   }
   return { ok: true, current: cur, level: screensaverLevel(),
-           modes: out, writable: CONFIG.allowControl };
+           modes: out, writable: CONFIG.allowControl,
+           replaceable: can.ok, reason: can.ok ? undefined : can.reason };
 }
 
 function mkdirp(dir) {
   if (fs.existsSync(dir)) return;
   mkdirp(path.dirname(dir));
   fs.mkdirSync(dir);
+}
+
+/*
+ * The replacements are QML, staged as qml/main.qml behind a copy of the stock
+ * appinfo.json. That is exactly right when the stock screen saver is itself a
+ * QML app, and exactly wrong when it is not: webOS 10 ships
+ * com.webos.app.screensaver as a Flutter app ("type": "flutter", AOT code in
+ * lib/libapp.so), and a Flutter appinfo over a directory holding only QML
+ * launches, fails "Unable to start engine without AOT data", and exits 85ms
+ * later - so the set never shows any screen saver at all. Read the stock type
+ * and keep the replacements off such sets. The staged copy of appinfo.json is
+ * the stock one, so this works whether or not a replacement is mounted.
+ */
+function stockScreensaverType() {
+  try {
+    return String(JSON.parse(rd(path.join(SCREENSAVER_APP_DIR, 'appinfo.json')) || '{}').type || '');
+  } catch (e) { return ''; }
+}
+
+function screensaverReplaceable() {
+  var t = stockScreensaverType();
+  if (t === 'qml') return { ok: true };
+  return { ok: false,
+           reason: 'the stock screen saver on this firmware is a ' + (t || 'non-QML') +
+                   ' app; the QML replacements cannot run in its place' };
 }
 
 /*
@@ -2857,9 +2884,16 @@ function mkdirp(dir) {
 function setScreensaver(mode, level, cb) {
   if (!SCREENSAVERS[mode]) return cb({ ok: false, error: 'unknown screen saver: ' + mode });
   level = (level === 'bright') ? 'bright' : 'dim';
+  if (mode !== 'stock') {
+    var can = screensaverReplaceable();
+    if (!can.ok) return cb({ ok: false, error: can.reason, current: screensaverMode() });
+  }
 
   execFile('/bin/umount', [SCREENSAVER_APP_DIR], { timeout: 4000 }, function () {
     if (mode === 'stock') {
+      // The boot hook remounts whenever the staged marker exists, so "stock"
+      // has to remove it or it only lasts until the next boot.
+      try { fs.unlinkSync(path.join(SCREENSAVER_DIR, SCREENSAVER_MARKER)); } catch (e) {}
       lastStats = null;
       return restartScreensaverApp(function () {
         cb({ ok: screensaverMode() === 'stock', current: screensaverMode(), level: screensaverLevel() });
@@ -2945,6 +2979,14 @@ function writeScreensaverQml(src, level) {
 function restageScreensaver() {
   var mode = screensaverMode();
   if (mode === 'stock') return;
+  var can = screensaverReplaceable();
+  if (!can.ok) {
+    // Staged on older firmware, or before this check existed, and now sitting
+    // over a stock app it cannot stand in for. Put the stock one back rather
+    // than leave the set with no screen saver at all.
+    console.error('screensaver: "' + mode + '" cannot replace the stock app (' + can.reason + '); restoring stock');
+    return setScreensaver('stock', screensaverLevel(), function () {});
+  }
   var src = assetPath(SCREENSAVERS[mode].qml);
   if (!src) return;
   try {
