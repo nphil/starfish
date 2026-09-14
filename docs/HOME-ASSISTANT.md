@@ -4,9 +4,26 @@ Entity reference and example automations.
 
 ---
 
+## Upgrading
+
+Nothing to do. The device id, topic prefix and every entity's `unique_id` are
+derived from the TV's name and are unchanged by the rename to Starfish, so
+existing entities, dashboards and automations keep working. `Server Version`
+keeps the id it was discovered under for the same reason; only the device's
+software line now reads `webOS (Starfish)`.
+
+One entity was withdrawn in 0.35.0: the `Screen Saver` **select**, because the
+QML screen saver replacements cannot run on webOS 10 (see the README). Its
+retained discovery config is cleared on connect, so Home Assistant removes it
+by itself rather than leaving it behind as unavailable. The `Start
+Screensaver` button is unaffected. If you referenced
+`select.lg_tv_screensaver_mode` in an automation or dashboard, remove it.
+
+---
+
 ## Entities
 
-Once connected to your MQTT broker, Home Assistant automatically discovers **up to 69 native entities** under a single unified device:
+Once connected to your MQTT broker, Home Assistant automatically discovers **up to 68 native entities** under a single unified device:
 
 ### Controls & Switches
 | Domain | Entity ID | Name | Description |
@@ -29,7 +46,6 @@ Once connected to your MQTT broker, Home Assistant automatically discovers **up 
 | `button` | `button.lg_tv_stop` | Stop | Stop media playback |
 | `switch` | `switch.lg_tv_oled_screen_shift` | OLED Screen Shift | Pixel orbiting, on OLED sets |
 | `select` | `select.lg_tv_oled_logo_dimming` | OLED Logo Dimming | Local logo dimming: Off, Light, High |
-| `select` | `select.lg_tv_screensaver_mode` | Screen Saver | Which screen saver the TV runs: LG default, Clock, Starfield, Fireworks or Panel vitals. Brightness is set on the dashboard's Screensaver tab |
 | `button` | `button.lg_tv_screensaver` | Start Screensaver | Starts the webOS screensaver, or dismisses one that is showing |
 | `text` | `text.lg_tv_screen_notification` | Screen Notification | Send custom toast messages to TV screen |
 | `button` | `button.lg_tv_restart` | Restart TV | Reboots the TV (requires `allowPower: true`) |

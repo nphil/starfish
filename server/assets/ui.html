@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>LG TV</title>
+<title>Starfish</title>
+<!--
+  Favicon inline as a data URI: the dashboard is one file served from the TV,
+  and a separate icon route would be another request on a Node 0.12 server
+  that has better things to do. Kept byte-identical to assets/starfish.svg.
+-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='sf' x1='32' y1='7' x2='32' y2='57' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23c4a7e7'/%3E%3Cstop offset='1' stop-color='%239ccfd8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M32 7 L38.5 23.5 L55.8 24.3 L42 35.2 L46.7 52.2 L32 42.5 L17.3 52.2 L22 35.2 L8.2 24.3 L25.5 23.5 Z' fill='url(%23sf)' stroke='url(%23sf)' stroke-width='7' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* ---------------------------------------------------------------
    Type.
@@ -90,7 +96,15 @@ body{
 /* ---- masthead ---- */
 header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
 .hdr-left{display:flex;align-items:baseline}
-.mark{font-family:'Outfit';font-weight:300;font-size:clamp(19px,2.4vw,26px);color:var(--w100);letter-spacing:.01em}
+.mark{font-family:'Outfit';font-weight:300;font-size:clamp(19px,2.4vw,26px);color:var(--w100);letter-spacing:.01em;
+      display:flex;align-items:baseline;gap:.34em}
+/* The glyph aligns to the cap height of the name beside it, not the baseline,
+   so it does not appear to sag. */
+.sf-mark{width:.92em;height:.92em;flex-shrink:0;align-self:center;margin-bottom:-.04em}
+.sf-name{font-weight:400;letter-spacing:.005em}
+/* The set's own name is the subject; the project name is the frame around it,
+   so the set reads at the same weight as the model that follows it. */
+.mark .sf-set{color:var(--w50);font-size:.68em;letter-spacing:.02em;margin-left:.15em}
 .mark #model{color:var(--w50);font-size:.68em;letter-spacing:.02em;margin-left:2px}
 
 /* Theme toggle */
@@ -540,7 +554,19 @@ footer{margin-top:38px;font-size:12px;letter-spacing:.10em;text-transform:upperc
 
 <header>
   <div class="hdr-left">
-    <div class="mark"><span id="brand">LG TV</span> <span id="model">&mdash;</span></div>
+    <div class="mark">
+      <svg class="sf-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="sfhdr" x1="32" y1="7" x2="32" y2="57" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#c4a7e7"/><stop offset="1" stop-color="#9ccfd8"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 7 L38.5 23.5 L55.8 24.3 L42 35.2 L46.7 52.2 L32 42.5 L17.3 52.2 L22 35.2 L8.2 24.3 L25.5 23.5 Z"
+              fill="url(#sfhdr)" stroke="url(#sfhdr)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <span class="sf-name">Starfish</span>
+      <span id="brand" class="sf-set">LG TV</span> <span id="model">&mdash;</span>
+    </div>
     <button type="button" class="theme-toggle" id="theme-toggle" title="Toggle light / dark theme" aria-label="Toggle theme">☾</button>
   </div>
   <div class="src">
@@ -1227,7 +1253,9 @@ async function tick() {
                     (d.capabilities ? d.capabilities.oled === true : (/oled/i.test(model) || !!(d.oled && d.oled.panel_hours !== undefined)));
     const brand = isOled ? 'LG OLED TV' : 'LG TV';
     if (q('brand')) q('brand').textContent = brand;
-    const want = model ? brand + ' · ' + model : brand;
+    // Tab title leads with the project so a pinned tab is identifiable, then
+    // names the set it is pointed at.
+    const want = 'Starfish · ' + (model ? brand + ' ' + model : brand);
     if (document.title !== want) document.title = want;
     // Panel state first: without it, a blanked screen still reads as though
     // something were being displayed.

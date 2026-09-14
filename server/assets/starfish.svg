@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Starfish">
+  <!--
+    A five-point star on a 64 unit grid, centred on 32,32: tips at radius 25
+    on -90deg and every 72deg after it, waists at radius 11. Drawn as a filled
+    path that is also stroked with a round join, which is what rounds the arms
+    off - a plain polygon gives sharp spines, and at favicon size those alias
+    into grit.
+
+    Rose Pine iris to foam, the palette LumaGlass uses, and no background: the
+    dashboard is black in dark mode and near-white in light, so a transparent
+    mark suits both.
+  -->
+  <defs>
+    <linearGradient id="sf" x1="32" y1="7" x2="32" y2="57" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c4a7e7"/>
+      <stop offset="1" stop-color="#9ccfd8"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 7 L38.5 23.5 L55.8 24.3 L42 35.2 L46.7 52.2 L32 42.5
+           L17.3 52.2 L22 35.2 L8.2 24.3 L25.5 23.5 Z"
+        fill="url(#sf)" stroke="url(#sf)" stroke-width="7"
+        stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
