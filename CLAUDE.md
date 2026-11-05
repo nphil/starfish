@@ -1,10 +1,45 @@
 # Working conventions
 
-## Never push to main
+## Push to main
 
-Branch, push the branch, open a PR. This applies to "commit and push" too.
-Push to an existing PR branch rather than opening a second one for the same
-line of work. Merging is the maintainer's call.
+Commit and push straight to `main`. No feature branches or PRs.
+
+To release: bump the version, move the changelog's Unreleased section under
+it, tag, and let the release workflow publish. No approval step.
+
+## The TV runs what main has
+
+Install on the TV only from a commit that is on `main` and pushed to both
+remotes (`origin` on GitHub, `forge` on git.nateshome.net). Name the
+installed binary hashes in the commit or the handoff. Scratch worktrees are
+for experiments; merge or remove them before the session ends, and never
+leave the only copy of installed code under `/tmp`.
+
+Build output (`target/`), packages and review screenshots stay out of git.
+
+## Quality bar
+
+- Before pushing: the touched crate's tests and `cargo clippy` pass.
+- No WIP, placeholders, ignored tests or leftover debug logging on `main`.
+- Frame loop, input, video and power changes need a measured result (frame
+  gate, video check) before claiming they are faster or fixed.
+- "Accepted" means checked on the actual TV, with the receipt path recorded.
+  Untested cases are listed as untested, not implied.
+- Tests cover the changed behavior and nothing more. A unit test runs well
+  under a second: no sleeps or long loops where a fake clock or a smaller input
+  proves the same. Delete tests that duplicate another test's coverage.
+- Every surface, card and plugin takes after the active theme: colours,
+  glass, radii and type come only from the theme's tokens and change live with
+  it; plugins supply data, never styling.
+- Integrations and extras (Scrypted, Home Assistant, Ring, Plex, Live TV
+  tuner sharing and anything new) are plugins: off until enabled in Settings,
+  each with its own settings and connection page. The core stays minimal.
+  Privileged work stays in the trusted helper and runs only while its plugin
+  is enabled. Reusable engines carry no LumaTV dependencies, so they can ship
+  as standalone homebrew apps.
+
+The open review of recent work, its method and findings: `docs/REVIEW.md` in
+the lumaglass repo.
 
 # Writing conventions
 
